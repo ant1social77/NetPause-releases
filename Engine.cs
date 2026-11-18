@@ -228,8 +228,9 @@ public sealed partial class Engine : IDisposable
 
     public Engine()
     {
-        var dir = System.IO.Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NetPause");
+        // NETPAUSE_DATA_DIR — служебная проверка «чистого» первого запуска на пустой папке
+        var dir = Environment.GetEnvironmentVariable("NETPAUSE_DATA_DIR") is string test && test.Length > 0 ? test
+            : System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NetPause");
         Directory.CreateDirectory(dir);
         ProtectDataDir(dir);
         _stateFile = System.IO.Path.Combine(dir, "state.json");
@@ -276,8 +277,12 @@ public sealed partial class Engine : IDisposable
     /// <summary>Есть ли сейчас в файрволе действующее блокирующее правило для этой записи.</summary>
     public bool IsBlocked(string key) => _applied.Contains(key);
 
+    /// <summary>Самый первый запуск на этом компьютере (данных ещё не было).</summary>
+    public bool FirstRun { get; private set; }
+
     public void Start()
     {
+        FirstRun = !File.Exists(_stateFile) && !File.Exists(_stateFile + ".bak");
         BackupOnUpgrade(System.IO.Path.GetDirectoryName(_stateFile)!);
         Load();
         lock (_lock)

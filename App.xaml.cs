@@ -69,10 +69,59 @@ public partial class App : Application
             }
         }) { IsBackground = true }.Start();
 
-        // при любом сбое сначала снимаем блокировки, чтобы интернет не остался отрезанным
-        DispatcherUnhandledException += (_, _) => _engine?.Dispose();
-        AppDomain.CurrentDomain.UnhandledException += (_, _) => _engine?.Dispose();
+        // при любом сбое сначала снимаем блокировки, чтобы интернет не остался отрезанным,
+        // и показываем, что случилось (раньше программа молча закрывалась)
+        DispatcherUnhandledException += (_, a) => { _engine?.Dispose(); ReportCrash(a.Exception, true); a.Handled = true; Shutdown(); };
+        AppDomain.CurrentDomain.UnhandledException += (_, a) => { _engine?.Dispose(); ReportCrash(a.ExceptionObject as Exception, true); };
 
+        try { StartApp(e); }
+        catch (Exception ex)
+        {
+            try { _engine?.Dispose(); } catch { }
+            ReportCrash(ex, true);
+            Shutdown();
+        }
+    }
+
+    /// <summary>
+    /// Записать причину сбоя в C:\ProgramData\NetPause\crash.txt (или во временную папку)
+    /// и показать окно с понятным текстом — чтобы было что прислать автору.
+    /// </summary>
+    public static void ReportCrash(Exception? ex, bool show)
+    {
+        string text = "NetPause " + Engine.AppVersion + ", " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + Environment.NewLine +
+                      "Windows " + Environment.OSVersion.Version + (Environment.Is64BitOperatingSystem ? " x64" : " x86") + Environment.NewLine +
+                      (ex?.ToString() ?? "неизвестная ошибка") + Environment.NewLine + Environment.NewLine;
+        string? file = null;
+        foreach (var dir in new[]
+                 {
+                     System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "NetPause"),
+                     System.IO.Path.GetTempPath(),
+                 })
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(dir);
+                var f = System.IO.Path.Combine(dir, dir.EndsWith("NetPause") ? "crash.txt" : "NetPause-crash.txt");
+                System.IO.File.AppendAllText(f, text);
+                file = f;
+                break;
+            }
+            catch { }
+        }
+        if (!show) return;
+        try
+        {
+            MessageBox.Show(
+                "NetPause не смог запуститься.\n\nПричина: " + (ex?.Message ?? "неизвестна") +
+                (file != null ? "\n\nПодробности записаны в файл:\n" + file + "\nПришлите его автору программы." : ""),
+                "NetPause", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        catch { }
+    }
+
+    void StartApp(StartupEventArgs e)
+    {
         _engine = new Engine();
         _engine.Start();
 
@@ -121,6 +170,17 @@ public partial class App : Application
 
         // при автозапуске панель не показываем, только значок у часов
         if (Array.IndexOf(e.Args, "--tray") < 0) _panel.ShowPanel();
+
+        // первый запуск: панель могла сразу спрятаться (фокус вернулся к установщику) —
+        // явно говорим, что программа работает и где её искать
+        if (_engine.FirstRun)
+            try
+            {
+                _tray.ShowBalloonTip(10000, "NetPause работает",
+                    "Значок NetPause — у часов (если его не видно, нажмите стрелку «^»). Нажмите на него, чтобы открыть панель.",
+                    System.Windows.Forms.ToolTipIcon.Info);
+            }
+            catch { }
     }
 
     void UpdateTray()

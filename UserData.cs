@@ -24,8 +24,9 @@ public sealed class UserSecrets
 
 public sealed partial class Engine
 {
-    static string UserDir => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NetPause");
+    static string UserDir => Environment.GetEnvironmentVariable("NETPAUSE_DATA_DIR") is string test && test.Length > 0
+        ? Path.Combine(test, "user")
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NetPause");
     static string SecretsFile => Path.Combine(UserDir, "secrets.json");
 
     /// <summary>Версия программы, например «1.0».</summary>

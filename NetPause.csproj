@@ -13,7 +13,7 @@
     <AssemblyName>NetPause</AssemblyName>
     <RootNamespace>NetPause</RootNamespace>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <ApplicationIcon>NetPause.ico</ApplicationIcon>
     <Product>NetPause</Product>
     <Description>NetPause — экономия трафика</Description>
