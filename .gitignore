@@ -1,0 +1,17 @@
+# сборки и временные файлы
+bin/
+obj/
+dist/
+publish/
+installer/
+*.user
+*.suo
+.vs/
+
+# личные данные никогда не попадают в хранилище (они и так лежат вне папки с кодом)
+state.json*
+secrets.json
+history.json
+hosts-today.json
+tracker-*.txt
+tracker-*.json
