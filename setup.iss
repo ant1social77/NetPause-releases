@@ -48,8 +48,10 @@ Name: "{autoprograms}\NetPause"; Filename: "{app}\NetPause.exe"
 Name: "{autodesktop}\NetPause"; Filename: "{app}\NetPause.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\NetPause.exe"; Parameters: "--autostart-on"; Description: "Открыть NetPause"; Tasks: autostart; Flags: nowait postinstall
-Filename: "{app}\NetPause.exe"; Description: "Открыть NetPause"; Tasks: not autostart; Flags: nowait postinstall
+; runascurrentuser: запускаем с правами установщика (администратора). Без этого флага Inno Setup
+; запускает программу от обычного пользователя, и Windows отвечает «требуется повышение прав».
+Filename: "{app}\NetPause.exe"; Parameters: "--autostart-on"; Description: "Открыть NetPause"; Tasks: autostart; Flags: nowait postinstall runascurrentuser
+Filename: "{app}\NetPause.exe"; Description: "Открыть NetPause"; Tasks: not autostart; Flags: nowait postinstall runascurrentuser
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM NetPause.exe"; Flags: runhidden; RunOnceId: "StopApp"
