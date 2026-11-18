@@ -21,3 +21,13 @@
 После запуска NetPause не открывает обычное окно — он живёт **значком у часов** (стрелка «^» справа на панели задач). Нажмите на значок, чтобы открыть панель.
 
 Если программа всё же не работает, она записывает причину в файл `C:\ProgramData\NetPause\crash.txt` (начиная с версии 1.0.1) — пришлите его автору.
+
+## Для разработчиков: как собрать
+
+Код программы лежит прямо в этом хранилище (C# .NET 8, WPF). Программа работает с правами администратора: учёт трафика идёт через ETW, блокировка — правилами файрвола Windows.
+
+1. Установите [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) и [Inno Setup 6](https://jrsoftware.org/isdl.php).
+2. Собрать и запустить для проверки: `dotnet build NetPause.csproj -c Release` (запускать от администратора).
+3. Собрать установщик: `powershell -ExecutionPolicy Bypass -File build-installer.ps1` → `installer\NetPause-Setup-<версия>.exe`. Версия задаётся в `NetPause.csproj` (`<Version>`).
+
+Данные пользователя в код не попадают: общие настройки лежат в `C:\ProgramData\NetPause`, логины трекеров — в `%LOCALAPPDATA%\NetPause` (в зашифрованном виде).
